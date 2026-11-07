@@ -1,7 +1,7 @@
 [package]
 name = "dashboard-gastos"
 version = "0.6.4"
-description = "ConsuMe - controle local de entradas e despesas"
+description = "consumy - controle local de entradas e despesas"
 authors = ["you"]
 edition = "2021"
 

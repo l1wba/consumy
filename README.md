@@ -1,12 +1,12 @@
-# ConsuMe
+# consumy
 
-Aplicativo desktop para controle financeiro pessoal. A interface usa React e TypeScript, e os lançamentos ficam em um banco SQLite local no computador por meio do Tauri. Não há servidor de aplicação, sincronização em nuvem ou IndexedDB.
+Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. Atualmente, os dados são armazenados em um banco SQLite local no computador; autenticação e sincronização na nuvem ainda não estão habilitadas.
 
 ## Versões
 
 O número da versão é mantido em `package.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock` e `src-tauri/tauri.conf.json`; mantenha esses valores sincronizados. O Vite obtém a versão do `package.json` e a exibe na janela "Sobre". A versão também define o nome dos instaladores.
 
-Seguimos o formato `MAJOR.MINOR.PATCH`: aumente `PATCH` para correções e ajustes pequenos, `MINOR` para funcionalidades compatíveis e `MAJOR` para mudanças incompatíveis. Como o app ainda está na série `0.x`, a versão `0.6.4` aplica a identidade visual ConsuMe à interface.
+Seguimos o formato `MAJOR.MINOR.PATCH`: aumente `PATCH` para correções e ajustes pequenos, `MINOR` para funcionalidades compatíveis e `MAJOR` para mudanças incompatíveis. Como o app ainda está na série `0.x`, a versão `0.6.4` aplica a identidade visual consumy à interface.
 
 ## Requisitos
 
@@ -45,3 +45,19 @@ Os ícones do aplicativo são gerados pelo Tauri a partir da logo quadrada com t
 ## Armazenamento
 
 Na primeira execução, o aplicativo cria `financas.db` na pasta de dados local do aplicativo gerenciada pelo Tauri. Lançamentos, preferências e categorias ficam nesse banco; categorias removidas deixam de aparecer para novos lançamentos, mas continuam nos registros antigos. Os valores monetários são armazenados em centavos inteiros para evitar imprecisão de ponto flutuante. Faça cópias de segurança desse arquivo para preservar seus dados.
+
+## Preparação para sincronização
+
+As operações de dados da interface estão isoladas pelo contrato `FinanceStore`; a implementação ativa continua sendo SQLite local. O esquema inicial futuro do Supabase está em `supabase/migrations/20261107000000_initial_schema.sql` e inclui políticas RLS que limitam categorias, lançamentos e preferências ao usuário autenticado.
+
+Essa migração é apenas uma preparação: ela ainda não configura um projeto Supabase, autenticação, sincronização nem uma implantação web. Não coloque chaves administrativas (`service_role`) no frontend ou no repositório. O banco SQLite local permanece intacto e deve ser mantido como backup durante a implementação e validação da migração.
+
+## Organização do código
+
+- `src/components/dashboard/`: resumo mensal e indicadores financeiros.
+- `src/components/transactions/`: formulário e tabela de lançamentos.
+- `src/components/dialogs/`: gerenciamento de categorias e informações do aplicativo.
+- `src/data/`: tipos compartilhados, contrato de dados e implementação SQLite local.
+- `src/styles/`: estilos específicos de componentes; `src/styles.css` mantém os estilos gerais da aplicação.
+- `supabase/migrations/`: alterações versionadas do esquema futuro do banco remoto.
+- `src-tauri/`: configuração e código do aplicativo desktop.
