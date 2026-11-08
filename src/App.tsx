@@ -23,6 +23,7 @@ import { MonthlyOverview } from "./components/dashboard/MonthlyOverview";
 import { NewTransactionForm } from "./components/transactions/NewTransactionForm";
 import { TransactionTable } from "./components/transactions/TransactionTable";
 import { AuthScreen } from "./components/auth/AuthScreen";
+import { LandingPage } from "./components/landing/LandingPage";
 import { DevelopmentNotice } from "./components/landing/DevelopmentNotice";
 import {
   createCategory,
@@ -59,6 +60,11 @@ function currentDate(): string {
 export default function App() {
   if (!isTauri()) {
     const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (import.meta.env.DEV) {
+      if (path === "/app") return <AuthenticatedApp />;
+      if (path === "/landing") return <LandingPage />;
+      return <DevelopmentNotice />;
+    }
     if (path === "/") return <DevelopmentNotice />;
     return <UnavailablePage />;
   }

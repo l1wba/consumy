@@ -65,4 +65,4 @@ Em **Authentication > URL Configuration**, durante o desenvolvimento use `http:/
 - `supabase/migrations/`: alterações versionadas do esquema futuro do banco remoto.
 - `src-tauri/`: configuração e código do aplicativo desktop.
 
-Na versão web, somente `/` exibe o aviso de desenvolvimento; os demais caminhos mostram uma página indisponível. A landing page segue mantida no código, mas não é exposta no site. O aplicativo desktop continua abrindo diretamente a experiência autenticada do app.
+Na versão publicada, somente `/` exibe o aviso de desenvolvimento; os demais caminhos mostram uma página indisponível. Durante o desenvolvimento local (`npm.cmd run dev`), `/app` abre o sistema e `/landing` abre a landing page. O aplicativo desktop continua abrindo diretamente a experiência autenticada do app.
