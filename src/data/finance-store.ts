@@ -16,4 +16,5 @@ export interface FinanceStore {
   listTransactions(month: string): Promise<Transaction[]>;
   createTransaction(transaction: NewTransaction): Promise<void>;
   removeTransaction(id: TransactionId): Promise<void>;
+  subscribeToChanges(onChange: () => void, onError: (error: Error) => void): () => void;
 }

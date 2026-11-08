@@ -52,7 +52,7 @@ export function TransactionTable({
           </tbody>
         </table>
       </div>
-      <div className="table-footer"><span>{transactions.length} {transactions.length === 1 ? "lançamento" : "lançamentos"}</span><span>Armazenado localmente no seu computador</span></div>
+      <div className="table-footer"><span>{transactions.length} {transactions.length === 1 ? "lançamento" : "lançamentos"}</span><span>Sincronizado com sua conta</span></div>
     </section>
   );
 }

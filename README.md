@@ -1,6 +1,6 @@
 # consumy
 
-Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. Atualmente, os dados são armazenados em um banco SQLite local no computador; autenticação e sincronização na nuvem ainda não estão habilitadas.
+Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. O app usa Supabase para autenticação e dados sincronizados; o banco SQLite permanece no projeto para preservar a implementação e os dados locais antigos durante a transição.
 
 ## Versões
 
@@ -46,11 +46,15 @@ Os ícones do aplicativo são gerados pelo Tauri a partir da logo quadrada com t
 
 Na primeira execução, o aplicativo cria `financas.db` na pasta de dados local do aplicativo gerenciada pelo Tauri. Lançamentos, preferências e categorias ficam nesse banco; categorias removidas deixam de aparecer para novos lançamentos, mas continuam nos registros antigos. Os valores monetários são armazenados em centavos inteiros para evitar imprecisão de ponto flutuante. Faça cópias de segurança desse arquivo para preservar seus dados.
 
-## Preparação para sincronização
+## Supabase e sincronização
 
-As operações de dados da interface estão isoladas pelo contrato `FinanceStore`; a implementação ativa continua sendo SQLite local. O esquema inicial futuro do Supabase está em `supabase/migrations/20261107000000_initial_schema.sql` e inclui políticas RLS que limitam categorias, lançamentos e preferências ao usuário autenticado.
+O aplicativo usa o Supabase para autenticação por e-mail/senha, dados remotos e atualizações em tempo real. Crie `.env.local` na raiz a partir de `.env.example` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` com os valores do projeto Supabase. Esses valores são usados pelo frontend; nunca coloque a chave `service_role` nesse arquivo.
 
-Essa migração é apenas uma preparação: ela ainda não configura um projeto Supabase, autenticação, sincronização nem uma implantação web. Não coloque chaves administrativas (`service_role`) no frontend ou no repositório. O banco SQLite local permanece intacto e deve ser mantido como backup durante a implementação e validação da migração.
+Execute a migração `supabase/migrations/20261107000000_initial_schema.sql` no projeto Supabase antes de usar os dados. As políticas RLS restringem cada tabela ao usuário autenticado. Para atualizações em tempo real, habilite as tabelas `categories`, `transactions` e `user_settings` na publicação `supabase_realtime` do projeto.
+
+Em **Authentication > URL Configuration**, durante o desenvolvimento use `http://127.0.0.1:1420` como **Site URL** e adicione esse endereço à lista de redirecionamentos permitidos. Depois do deploy, atualize o **Site URL** para o domínio da Vercel e mantenha os endereços de desenvolvimento e produção permitidos. Faça o cadastro inicial pela interface web no navegador para confirmar o e-mail; depois entre com a mesma conta no desktop.
+
+A implementação continua em transição: os dados existentes no SQLite permanecem no dispositivo e ainda não são importados automaticamente para o Supabase. Faça backup do arquivo local e não o apague até que a ferramenta de migração dos dados seja implementada e validada.
 
 ## Organização do código
 

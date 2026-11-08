@@ -27,7 +27,7 @@ export function AboutDialog({ error, onClose, onOpenCreatorLink }: AboutDialogPr
           <div>
             <p className="dialog-eyebrow">INFORMAÇÕES DO APLICATIVO</p>
             <h2 id="about-dialog-title">Sobre o consumy</h2>
-            <p>Controle financeiro pessoal, simples e privado.</p>
+            <p>Controle financeiro pessoal, simples e sincronizado.</p>
           </div>
           <button className="dialog-close" type="button" aria-label="Fechar janela" onClick={onClose}>
             <X size={19} />
@@ -38,7 +38,7 @@ export function AboutDialog({ error, onClose, onOpenCreatorLink }: AboutDialogPr
           <div className="about-app-details">
             <strong>consumy</strong>
             <span>Versão {__APP_VERSION__}</span>
-            <p>Aplicativo desktop para organizar entradas, despesas e categorias. Seus dados ficam armazenados localmente no seu computador.</p>
+            <p>Organize entradas, despesas e categorias, com seus dados sincronizados entre dispositivos.</p>
           </div>
           <div className="about-creator">
             <span className="about-section-label">CRIADO POR</span>

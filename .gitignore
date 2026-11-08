@@ -1,5 +1,8 @@
 node_modules/
 dist/
+.env
+.env.*
+!.env.example
 # Artefatos de compilação Tauri, incluindo builds dev/debug e instaladores release
 src-tauri/target/
 src-tauri/gen/schemas/

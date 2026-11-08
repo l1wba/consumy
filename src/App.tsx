@@ -6,6 +6,7 @@ import {
   CircleHelp,
   Info,
   LayoutDashboard,
+  LogOut,
   Moon,
   Plus,
   Pencil,
@@ -20,6 +21,7 @@ import { CategoryDialog } from "./components/dialogs/CategoryDialog";
 import { MonthlyOverview } from "./components/dashboard/MonthlyOverview";
 import { NewTransactionForm } from "./components/transactions/NewTransactionForm";
 import { TransactionTable } from "./components/transactions/TransactionTable";
+import { AuthScreen } from "./components/auth/AuthScreen";
 import {
   createCategory,
   createTransaction,
@@ -31,6 +33,7 @@ import {
   removeTransaction,
   renameCategory,
   saveThemePreference,
+  subscribeToFinanceChanges,
   type Category,
   type Transaction,
   type TransactionId,
@@ -38,6 +41,8 @@ import {
   type ThemePreference,
 } from "./db";
 import { formatMonth } from "./utils/format";
+import { getSupabaseClient, isSupabaseConfigured } from "./supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 function currentMonth(): string {
   const now = new Date();
@@ -49,7 +54,86 @@ function currentDate(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
-function App() {
+export default function App() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
+
+  useEffect(() => {
+    if (!isSupabaseConfigured()) {
+      setAuthLoading(false);
+      return;
+    }
+
+    let active = true;
+    const client = getSupabaseClient();
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, nextSession) => {
+      if (active) {
+        setSession(nextSession);
+        setAuthError("");
+        setAuthLoading(false);
+      }
+    });
+
+    void client.auth.getSession()
+      .then(({ data, error: sessionError }) => {
+        if (sessionError) throw sessionError;
+        if (active) {
+          setSession(data.session);
+          setAuthLoading(false);
+        }
+      })
+      .catch((cause: unknown) => {
+        if (active) {
+          setAuthError(cause instanceof Error ? cause.message : String(cause));
+          setAuthLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function signOut() {
+    try {
+      const { error } = await getSupabaseClient().auth.signOut();
+      if (error) throw error;
+    } catch (cause) {
+      setAuthError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  if (authLoading) {
+    return <main className="auth-page"><p role="status">Conectando à sua conta...</p></main>;
+  }
+  if (!session) {
+    return (
+      <>
+        {authError && <p className="auth-global-error" role="alert">{authError}</p>}
+        <AuthScreen />
+      </>
+    );
+  }
+  return (
+    <FinanceApp
+      userEmail={session.user.email ?? "Conta"}
+      authError={authError}
+      onSignOut={() => void signOut()}
+    />
+  );
+}
+
+function FinanceApp({
+  userEmail,
+  authError,
+  onSignOut,
+}: {
+  userEmail: string;
+  authError: string;
+  onSignOut: () => void;
+}) {
   const [month, setMonth] = useState(currentMonth);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [kindFilter, setKindFilter] = useState<"all" | TransactionKind>("all");
@@ -113,7 +197,7 @@ function App() {
     try {
       setTransactions(await listTransactions(month));
     } catch (cause) {
-      setError(`Não foi possível acessar o banco de dados local. ${String(cause)}`);
+      setError(`Não foi possível acessar os dados sincronizados. ${String(cause)}`);
     } finally {
       setLoading(false);
     }
@@ -132,6 +216,32 @@ function App() {
         setError(`Não foi possível carregar a preferência de tema. ${String(cause)}`);
       });
   }, []);
+
+  const refreshCategories = useCallback(async () => {
+    try {
+      setCategories(await listCategories());
+    } catch (cause) {
+      setError(`Não foi possível atualizar as categorias sincronizadas. ${String(cause)}`);
+    }
+  }, []);
+
+  const refreshTheme = useCallback(async () => {
+    try {
+      const preference = await getThemePreference();
+      if (preference) setTheme(preference);
+    } catch (cause) {
+      setError(`Não foi possível atualizar a preferência de tema. ${String(cause)}`);
+    }
+  }, []);
+
+  useEffect(() => subscribeToFinanceChanges(
+    () => {
+      void refresh();
+      void refreshCategories();
+      void refreshTheme();
+    },
+    (cause) => setError(`A sincronização em tempo real foi interrompida. ${cause.message}`),
+  ), [refresh, refreshCategories, refreshTheme]);
 
   useEffect(() => {
     listCategories()
@@ -349,7 +459,7 @@ function App() {
         <div className="sidebar-bottom">
           <div className="local-note">
             <span className="local-note-icon"><CircleHelp size={17} /></span>
-            <div><strong>Seus dados, no seu PC</strong><p>Salvos localmente em um banco SQLite.</p></div>
+            <div><strong>Seus dados sincronizados</strong><p>Privados para sua conta.</p></div>
           </div>
           <section className={`settings-menu${settingsOpen ? " open" : ""}`}>
             <button
@@ -442,10 +552,10 @@ function App() {
               </div>
             </div>
           </section>
-          <button className="profile-button" type="button">
-            <span className="avatar">L</span>
-            <span className="profile-copy"><strong>Meu espaço</strong><small>Uso pessoal</small></span>
-            <Settings size={17} className="profile-settings" />
+          <button className="profile-button" type="button" aria-label={`Sair da conta ${userEmail}`} onClick={onSignOut}>
+            <span className="avatar">{userEmail.slice(0, 1).toLocaleUpperCase("pt-BR")}</span>
+            <span className="profile-copy"><strong>{userEmail}</strong><small>Sair da conta</small></span>
+            <LogOut size={17} className="profile-settings" />
           </button>
         </div>
       </aside>
@@ -475,7 +585,7 @@ function App() {
             <span className="period-label">{formatMonth(month)}</span>
           </section>
 
-          {error && <div className="error-banner" role="alert">{error}</div>}
+          {(error || authError) && <div className="error-banner" role="alert">{error || authError}</div>}
 
           {formOpen && (
             <NewTransactionForm
@@ -514,7 +624,7 @@ function App() {
             onKindFilterChange={setKindFilter}
             onDelete={(id, description) => void handleDelete(id, description)}
           />
-          <footer className="page-footer">Finanças pessoais <span>•</span> Seus dados ficam neste computador</footer>
+          <footer className="page-footer">Finanças pessoais <span>•</span> Sincronizado com segurança</footer>
         </div>
       </main>
       {categoryDialog && (
@@ -549,5 +659,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

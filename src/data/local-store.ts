@@ -157,4 +157,8 @@ export class LocalFinanceStore implements FinanceStore {
     const database = await this.getDatabase();
     await database.execute("DELETE FROM transactions WHERE id = $1", [id]);
   }
+
+  subscribeToChanges(): () => void {
+    return () => {};
+  }
 }

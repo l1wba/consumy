@@ -1,5 +1,5 @@
 import type { FinanceStore } from "./data/finance-store";
-import { LocalFinanceStore } from "./data/local-store";
+import { SupabaseFinanceStore } from "./data/supabase-store";
 import type {
   Category,
   NewTransaction,
@@ -19,40 +19,52 @@ export {
 } from "./data/types";
 export type { FinanceStore } from "./data/finance-store";
 
-const store: FinanceStore = new LocalFinanceStore();
+let store: FinanceStore | undefined;
+
+function getStore(): FinanceStore {
+  store ??= new SupabaseFinanceStore();
+  return store;
+}
 
 export function listCategories(): Promise<Category[]> {
-  return store.listCategories();
+  return getStore().listCategories();
 }
 
 export function createCategory(category: Category): Promise<void> {
-  return store.createCategory(category);
+  return getStore().createCategory(category);
 }
 
 export function removeCategory(category: Category): Promise<void> {
-  return store.removeCategory(category);
+  return getStore().removeCategory(category);
 }
 
 export function renameCategory(category: Category, newName: string): Promise<void> {
-  return store.renameCategory(category, newName);
+  return getStore().renameCategory(category, newName);
 }
 
 export function getThemePreference(): Promise<ThemePreference | null> {
-  return store.getThemePreference();
+  return getStore().getThemePreference();
 }
 
 export function saveThemePreference(theme: ThemePreference): Promise<void> {
-  return store.saveThemePreference(theme);
+  return getStore().saveThemePreference(theme);
 }
 
 export function listTransactions(month: string): Promise<Transaction[]> {
-  return store.listTransactions(month);
+  return getStore().listTransactions(month);
 }
 
 export function createTransaction(transaction: NewTransaction): Promise<void> {
-  return store.createTransaction(transaction);
+  return getStore().createTransaction(transaction);
 }
 
 export function removeTransaction(id: TransactionId): Promise<void> {
-  return store.removeTransaction(id);
+  return getStore().removeTransaction(id);
+}
+
+export function subscribeToFinanceChanges(
+  onChange: () => void,
+  onError: (error: Error) => void,
+): () => void {
+  return getStore().subscribeToChanges(onChange, onError);
 }
