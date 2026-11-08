@@ -5,7 +5,9 @@ import { getSupabaseClient, isSupabaseConfigured } from "../../supabase/client";
 type AuthMode = "sign-in" | "sign-up";
 
 export function AuthScreen() {
-  const [mode, setMode] = useState<AuthMode>("sign-in");
+  const [mode, setMode] = useState<AuthMode>(() =>
+    new URLSearchParams(window.location.search).get("signup") === "1" ? "sign-up" : "sign-in",
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,7 +28,7 @@ export function AuthScreen() {
         const { data, error: signUpError } = await client.auth.signUp({
           email: email.trim(),
           password,
-          options: isTauri() ? undefined : { emailRedirectTo: window.location.origin },
+          options: isTauri() ? undefined : { emailRedirectTo: `${window.location.origin}/app` },
         });
         if (signUpError) throw signUpError;
         if (!data.session) {
@@ -44,6 +46,7 @@ export function AuthScreen() {
     return (
       <main className="auth-page">
         <section className="auth-card" aria-labelledby="auth-title">
+          {!isTauri() && <a className="auth-home-link" href="/">← Voltar à apresentação</a>}
           <p className="eyebrow">CONTA E SINCRONIZAÇÃO</p>
           <h1 id="auth-title">Configure o Supabase</h1>
           <p className="auth-description">Adicione a URL do projeto e a chave publicável ao arquivo local `.env.local` e reinicie o aplicativo.</p>
@@ -58,6 +61,7 @@ export function AuthScreen() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="auth-title">
+        {!isTauri() && <a className="auth-home-link" href="/">← Voltar à apresentação</a>}
         <p className="eyebrow">CONTA E SINCRONIZAÇÃO</p>
         <h1 id="auth-title">{mode === "sign-in" ? "Entrar no consumy" : "Criar sua conta"}</h1>
         <p className="auth-description">Acesse seus lançamentos e mantenha seus dispositivos sincronizados.</p>

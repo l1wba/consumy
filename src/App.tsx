@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
-  ChartNoAxesCombined,
   ChevronDown,
   CircleHelp,
   Info,
@@ -14,7 +13,9 @@ import {
   Sun,
   Tags,
   Wallet,
+  ChartNoAxesCombined,
 } from "lucide-react";
+import { isTauri } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { AboutDialog } from "./components/dialogs/AboutDialog";
 import { CategoryDialog } from "./components/dialogs/CategoryDialog";
@@ -22,6 +23,7 @@ import { MonthlyOverview } from "./components/dashboard/MonthlyOverview";
 import { NewTransactionForm } from "./components/transactions/NewTransactionForm";
 import { TransactionTable } from "./components/transactions/TransactionTable";
 import { AuthScreen } from "./components/auth/AuthScreen";
+import { DevelopmentNotice } from "./components/landing/DevelopmentNotice";
 import {
   createCategory,
   createTransaction,
@@ -55,6 +57,24 @@ function currentDate(): string {
 }
 
 export default function App() {
+  if (!isTauri()) {
+    const path = window.location.pathname.replace(/\/+$/, "") || "/";
+    if (path === "/") return <DevelopmentNotice />;
+    return <UnavailablePage />;
+  }
+  return <AuthenticatedApp />;
+}
+
+function UnavailablePage() {
+  return (
+    <main className="unavailable-page">
+      <img src="/consumy-mark.png" alt="" />
+      <h1>Esta página não está disponível.</h1>
+    </main>
+  );
+}
+
+function AuthenticatedApp() {
   const [session, setSession] = useState<Session | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState("");

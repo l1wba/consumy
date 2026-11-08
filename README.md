@@ -52,10 +52,11 @@ O aplicativo usa o Supabase para autenticação por e-mail/senha, dados remotos 
 
 Execute a migração `supabase/migrations/20261107000000_initial_schema.sql` no projeto Supabase antes de usar os dados. As políticas RLS restringem cada tabela ao usuário autenticado. Para atualizações em tempo real, habilite as tabelas `categories`, `transactions` e `user_settings` na publicação `supabase_realtime` do projeto.
 
-Em **Authentication > URL Configuration**, durante o desenvolvimento use `http://127.0.0.1:1420` como **Site URL** e adicione esse endereço à lista de redirecionamentos permitidos. Depois do deploy, atualize o **Site URL** para o domínio da Vercel e mantenha os endereços de desenvolvimento e produção permitidos. Faça o cadastro inicial pela interface web no navegador para confirmar o e-mail; depois entre com a mesma conta no desktop.
+Em **Authentication > URL Configuration**, durante o desenvolvimento use `http://127.0.0.1:1420` como **Site URL** e adicione `http://127.0.0.1:1420/app` à lista de redirecionamentos permitidos. Depois do deploy, atualize o **Site URL** para o domínio da Vercel e permita também `https://consumy.vercel.app/app` (ajuste se o domínio mudar). O fluxo web retorna para `/app` após a confirmação de e-mail. Faça o cadastro inicial pela interface web no navegador; depois entre com a mesma conta no desktop.
 
 ## Organização do código
 
+- `src/components/landing/`: página pública de apresentação do consumy.
 - `src/components/dashboard/`: resumo mensal e indicadores financeiros.
 - `src/components/transactions/`: formulário e tabela de lançamentos.
 - `src/components/dialogs/`: gerenciamento de categorias e informações do aplicativo.
@@ -63,3 +64,5 @@ Em **Authentication > URL Configuration**, durante o desenvolvimento use `http:/
 - `src/styles/`: estilos específicos de componentes; `src/styles.css` mantém os estilos gerais da aplicação.
 - `supabase/migrations/`: alterações versionadas do esquema futuro do banco remoto.
 - `src-tauri/`: configuração e código do aplicativo desktop.
+
+Na versão web, somente `/` exibe o aviso de desenvolvimento; os demais caminhos mostram uma página indisponível. A landing page segue mantida no código, mas não é exposta no site. O aplicativo desktop continua abrindo diretamente a experiência autenticada do app.
