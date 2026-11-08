@@ -15,7 +15,7 @@ Seguimos o formato `MAJOR.MINOR.PATCH`: aumente `PATCH` para correções e ajust
 - Dependências de sistema do Tauri 2 para a plataforma usada
 
 No Windows, instale o Visual Studio 2022 Build Tools com a carga **Desenvolvimento para desktop com C++**, incluindo o MSVC v143 (x64/x86) e um Windows 10/11 SDK. Esses componentes fornecem o `link.exe` exigido para compilar o alvo Rust MSVC. Instale também o WebView2 Runtime.
-Consulte [requirements.txt](./requirements.txt) para a lista de pré-requisitos e comandos no Windows.
+Consulte [WINDOWS_SETUP.md](./WINDOWS_SETUP.md) para a lista de pré-requisitos e comandos no Windows.
 
 ## Desenvolvimento
 
