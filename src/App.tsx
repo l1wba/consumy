@@ -3,18 +3,16 @@ import {
   CalendarDays,
   CalendarClock,
   ChevronDown,
-  CircleHelp,
   Info,
   LayoutDashboard,
   LogOut,
   Moon,
   Plus,
   Pencil,
+  ReceiptText,
   Settings,
   Sun,
   Tags,
-  Wallet,
-  ChartNoAxesCombined,
 } from "lucide-react";
 import { isTauri } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -23,6 +21,7 @@ import { CategoryDialog } from "./components/dialogs/CategoryDialog";
 import { MonthlyOverview } from "./components/dashboard/MonthlyOverview";
 import { NewTransactionForm } from "./components/transactions/NewTransactionForm";
 import { TransactionTable } from "./components/transactions/TransactionTable";
+import { ExpenseStatementPage } from "./components/transactions/ExpenseStatementPage";
 import { AuthScreen } from "./components/auth/AuthScreen";
 import { LandingPage } from "./components/landing/LandingPage";
 import { DevelopmentNotice } from "./components/landing/DevelopmentNotice";
@@ -191,6 +190,7 @@ function FinanceApp({
   const [editedCategoryName, setEditedCategoryName] = useState("");
   const [recurringView, setRecurringView] = useState<RecurringItemType | null>(null);
   const [recurringMenuOpen, setRecurringMenuOpen] = useState(false);
+  const [statementOpen, setStatementOpen] = useState(false);
   const [financeRevision, setFinanceRevision] = useState(0);
 
   const categoriesForKind = useMemo(
@@ -354,6 +354,7 @@ function FinanceApp({
     try {
       await removeTransaction(id);
       await refresh();
+      setFinanceRevision((revision) => revision + 1);
     } catch (cause) {
       setError(`Não foi possível excluir o lançamento. ${String(cause)}`);
     }
@@ -485,9 +486,12 @@ function FinanceApp({
         </a>
         <div className="workspace-label">ESPAÇO PESSOAL</div>
         <nav className="main-nav" aria-label="Navegação principal">
-          <a className={`nav-item${recurringView === null ? " active" : ""}`} href="#dashboard" onClick={() => setRecurringView(null)}><LayoutDashboard size={18} /> Visão geral</a>
-          <a className="nav-item" href="#transacoes" onClick={() => setRecurringView(null)}><Wallet size={18} /> Lançamentos</a>
-          <a className="nav-item" href="#categorias" onClick={() => setRecurringView(null)}><ChartNoAxesCombined size={18} /> Categorias</a>
+          <a className={`nav-item${recurringView === null && !statementOpen ? " active" : ""}`} href="#dashboard" aria-label="Resumo geral" onClick={() => {
+            setRecurringView(null);
+            setStatementOpen(false);
+          }}>
+            <LayoutDashboard size={18} /> Resumo geral
+          </a>
           <div className={`recurring-nav-group${recurringMenuOpen ? " open" : ""}`}>
             <button
               className={`nav-item recurring-nav-trigger${recurringView ? " active" : ""}`}
@@ -501,16 +505,26 @@ function FinanceApp({
               <ChevronDown size={14} className="recurring-nav-chevron" />
             </button>
             <div className="recurring-nav-submenu" id="recurring-nav-submenu" aria-hidden={!recurringMenuOpen}>
-              <button className={recurringView === "bill" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => setRecurringView("bill")}>Contas fixas</button>
-              <button className={recurringView === "subscription" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => setRecurringView("subscription")}>Assinaturas</button>
+              <button className={recurringView === "bill" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => {
+                setStatementOpen(false);
+                setRecurringView("bill");
+                setRecurringMenuOpen(false);
+              }}>Contas fixas</button>
+              <button className={recurringView === "subscription" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => {
+                setStatementOpen(false);
+                setRecurringView("subscription");
+                setRecurringMenuOpen(false);
+              }}>Assinaturas</button>
             </div>
           </div>
+          <button className={`nav-item statement-nav-item${statementOpen ? " active" : ""}`} type="button" onClick={() => {
+            setRecurringView(null);
+            setStatementOpen(true);
+          }}>
+            <ReceiptText size={18} /> Extrato
+          </button>
         </nav>
         <div className="sidebar-bottom">
-          <div className="local-note">
-            <span className="local-note-icon"><CircleHelp size={17} /></span>
-            <div><strong>Seus dados sincronizados</strong><p>Privados para sua conta.</p></div>
-          </div>
           <section className={`settings-menu${settingsOpen ? " open" : ""}`}>
             <button
               className="settings-trigger"
@@ -577,12 +591,10 @@ function FinanceApp({
                         <path d="M5 3.5v6M2 6.5h6M5 20.5 20.5 5M15.5 19h6" />
                       </svg>
                       <span>Adicionar/remover categorias</span>
-                      <ChevronDown size={13} className="submenu-item-chevron" />
                     </button>
                     <button className="category-submenu-item" type="button" tabIndex={categorySubmenuOpen ? 0 : -1} onClick={() => openCategoryDialog("edit")}>
                       <Pencil size={15} />
                       <span>Editar categorias</span>
-                      <ChevronDown size={13} className="submenu-item-chevron" />
                     </button>
                   </div>
                 </div>
@@ -612,14 +624,16 @@ function FinanceApp({
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumb">Painel <span>/</span> <strong>{recurringView === "bill" ? "Contas fixas" : recurringView === "subscription" ? "Assinaturas" : "Visão geral"}</strong></div>
+          <div className="breadcrumb">Painel <span>/</span> <strong>{statementOpen ? "Extrato" : recurringView === "bill" ? "Contas fixas" : recurringView === "subscription" ? "Assinaturas" : "Resumo geral"}</strong></div>
           <div className="topbar-actions">
-            <label className="month-picker">
-              <CalendarDays size={16} />
-              <input aria-label={recurringView ? "Mês dos vencimentos" : "Mês dos lançamentos"} type="month" value={month} onChange={(event) => setMonth(event.target.value || currentMonth())} />
-              <ChevronDown size={14} className="month-chevron" />
-            </label>
-            {!recurringView && (
+            {!statementOpen && (
+              <label className="month-picker">
+                <CalendarDays size={16} />
+                <input aria-label={recurringView ? "Mês dos vencimentos" : "Mês dos lançamentos"} type="month" value={month} onChange={(event) => setMonth(event.target.value || currentMonth())} />
+                <ChevronDown size={14} className="month-chevron" />
+              </label>
+            )}
+            {!recurringView && !statementOpen && (
               <button className="primary-button" onClick={() => setFormOpen((open) => !open)} type="button">
                 <Plus size={17} /> Novo lançamento
               </button>
@@ -628,7 +642,13 @@ function FinanceApp({
         </header>
 
         <div className="page-content">
-          {recurringView ? (
+          {statementOpen ? (
+            <ExpenseStatementPage
+              categories={categories}
+              syncVersion={financeRevision}
+              onDelete={(id, description) => void handleDelete(id, description)}
+            />
+          ) : recurringView ? (
             <RecurringPaymentsPage
               itemType={recurringView}
               month={month}

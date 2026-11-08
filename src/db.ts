@@ -62,6 +62,10 @@ export function listTransactions(month: string): Promise<Transaction[]> {
   return getStore().listTransactions(month);
 }
 
+export function listExpenses(startDate: string, endDate: string): Promise<Transaction[]> {
+  return getStore().listExpenses(startDate, endDate);
+}
+
 export function createTransaction(transaction: NewTransaction): Promise<void> {
   return getStore().createTransaction(transaction);
 }

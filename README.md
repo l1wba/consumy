@@ -30,6 +30,25 @@ Se o Rust informar `linker link.exe not found`, abra o **Developer PowerShell fo
 
 O comando abre o aplicativo desktop e inicia o Vite como servidor de desenvolvimento local temporário. Esse servidor só atende a interface enquanto o modo de desenvolvimento está aberto; não é necessário hospedar nem administrar um servidor. O Vite ignora `src-tauri/target`, pois o Cargo modifica esses arquivos durante a compilação. O perfil Rust de desenvolvimento desativa símbolos de depuração para reduzir o espaço usado pelos artefatos locais.
 
+## Aplicativo Android
+
+O consumy pode ser executado como aplicativo Android usando a mesma interface React, com navegação adaptada para celular e dados sincronizados pelo Supabase. Para preparar o ambiente no Windows, instale o Android Studio com Android SDK, Android SDK Command-line Tools e NDK, e configure o JDK fornecido pelo Android Studio no `PATH` ou em `JAVA_HOME`. O Tauri também precisa das variáveis `ANDROID_HOME` e `NDK_HOME` apontando para o SDK e o NDK.
+
+Com o Android Studio e um dispositivo/emulador configurados, gere o projeto Android uma vez:
+
+```powershell
+npm.cmd run android:init
+```
+
+Para executar em desenvolvimento ou gerar os instaladores Android:
+
+```powershell
+npm.cmd run android:dev
+npm.cmd run android:build
+```
+
+O comando de build gera APKs para instalação e um AAB para distribuição. O aplicativo usa as mesmas credenciais Supabase configuradas em `.env.local`; não inclua chaves `service_role` no aplicativo.
+
 ## Gerar aplicativo
 
 ```powershell

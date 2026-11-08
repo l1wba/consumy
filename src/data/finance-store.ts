@@ -17,6 +17,7 @@ export interface FinanceStore {
   getThemePreference(): Promise<ThemePreference | null>;
   saveThemePreference(theme: ThemePreference): Promise<void>;
   listTransactions(month: string): Promise<Transaction[]>;
+  listExpenses(startDate: string, endDate: string): Promise<Transaction[]>;
   createTransaction(transaction: NewTransaction): Promise<void>;
   removeTransaction(id: TransactionId): Promise<void>;
   listRecurringItems(): Promise<RecurringItem[]>;

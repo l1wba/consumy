@@ -131,6 +131,28 @@ export class SupabaseFinanceStore implements FinanceStore {
     return data as StoredTransaction[];
   }
 
+  async listExpenses(startDate: string, endDate: string): Promise<Transaction[]> {
+    const pageSize = 500;
+    const expenses: StoredTransaction[] = [];
+
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await this.client
+        .from("transactions")
+        .select("id, description, amount, kind, category, date")
+        .eq("kind", "expense")
+        .gte("date", startDate)
+        .lte("date", endDate)
+        .order("date", { ascending: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + pageSize - 1);
+      if (error) throw error;
+      expenses.push(...(data as StoredTransaction[]));
+      if (data.length < pageSize) break;
+    }
+
+    return expenses;
+  }
+
   async createTransaction(transaction: NewTransaction): Promise<void> {
     const userId = await this.getUserId();
     const { error } = await this.client
