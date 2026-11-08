@@ -1,6 +1,6 @@
 # consumy
 
-Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. O app usa Supabase para autenticação e dados sincronizados; o banco SQLite permanece no projeto para preservar a implementação e os dados locais antigos durante a transição.
+Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. O app usa Supabase para autenticação e armazenamento sincronizado entre dispositivos.
 
 ## Versões
 
@@ -44,7 +44,7 @@ Os ícones do aplicativo são gerados pelo Tauri a partir da logo quadrada com t
 
 ## Armazenamento
 
-Na primeira execução, o aplicativo cria `financas.db` na pasta de dados local do aplicativo gerenciada pelo Tauri. Lançamentos, preferências e categorias ficam nesse banco; categorias removidas deixam de aparecer para novos lançamentos, mas continuam nos registros antigos. Os valores monetários são armazenados em centavos inteiros para evitar imprecisão de ponto flutuante. Faça cópias de segurança desse arquivo para preservar seus dados.
+Lançamentos, categorias e preferências são armazenados no Supabase e associados à conta autenticada. O app requer conexão com a internet para acessar esses dados. Uma eventual base `financas.db` de versões antigas não é mais acessada nem removida automaticamente.
 
 ## Supabase e sincronização
 
@@ -54,14 +54,12 @@ Execute a migração `supabase/migrations/20261107000000_initial_schema.sql` no 
 
 Em **Authentication > URL Configuration**, durante o desenvolvimento use `http://127.0.0.1:1420` como **Site URL** e adicione esse endereço à lista de redirecionamentos permitidos. Depois do deploy, atualize o **Site URL** para o domínio da Vercel e mantenha os endereços de desenvolvimento e produção permitidos. Faça o cadastro inicial pela interface web no navegador para confirmar o e-mail; depois entre com a mesma conta no desktop.
 
-A implementação continua em transição: os dados existentes no SQLite permanecem no dispositivo e ainda não são importados automaticamente para o Supabase. Faça backup do arquivo local e não o apague até que a ferramenta de migração dos dados seja implementada e validada.
-
 ## Organização do código
 
 - `src/components/dashboard/`: resumo mensal e indicadores financeiros.
 - `src/components/transactions/`: formulário e tabela de lançamentos.
 - `src/components/dialogs/`: gerenciamento de categorias e informações do aplicativo.
-- `src/data/`: tipos compartilhados, contrato de dados e implementação SQLite local.
+- `src/data/`: tipos compartilhados, contrato de dados e implementação Supabase.
 - `src/styles/`: estilos específicos de componentes; `src/styles.css` mantém os estilos gerais da aplicação.
 - `supabase/migrations/`: alterações versionadas do esquema futuro do banco remoto.
 - `src-tauri/`: configuração e código do aplicativo desktop.
