@@ -6,7 +6,7 @@ Aplicativo de finanças pessoais feito com React, TypeScript e Tauri. O app usa 
 
 O número da versão é mantido em `package.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock` e `src-tauri/tauri.conf.json`; mantenha esses valores sincronizados. O Vite obtém a versão do `package.json` e a exibe na janela "Sobre". A versão também define o nome dos instaladores.
 
-Seguimos o formato `MAJOR.MINOR.PATCH`: aumente `PATCH` para correções e ajustes pequenos, `MINOR` para funcionalidades compatíveis e `MAJOR` para mudanças incompatíveis. Como o app ainda está na série `0.x`, a versão `0.6.4` aplica a identidade visual consumy à interface.
+Seguimos o formato `MAJOR.MINOR.PATCH`: aumente `PATCH` para correções e ajustes pequenos, `MINOR` para funcionalidades compatíveis e `MAJOR` para mudanças incompatíveis. Como o app ainda está na série `0.x`, a versão `0.7.0` adiciona o controle de contas recorrentes.
 
 ## Requisitos
 
@@ -50,7 +50,9 @@ Lançamentos, categorias e preferências são armazenados no Supabase e associad
 
 O aplicativo usa o Supabase para autenticação por e-mail/senha, dados remotos e atualizações em tempo real. Crie `.env.local` na raiz a partir de `.env.example` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` com os valores do projeto Supabase. Esses valores são usados pelo frontend; nunca coloque a chave `service_role` nesse arquivo.
 
-Execute a migração `supabase/migrations/20261107000000_initial_schema.sql` no projeto Supabase antes de usar os dados. As políticas RLS restringem cada tabela ao usuário autenticado. Para atualizações em tempo real, habilite as tabelas `categories`, `transactions` e `user_settings` na publicação `supabase_realtime` do projeto.
+Execute, em ordem, as migrations em `supabase/migrations/` no projeto Supabase antes de usar os dados. As políticas RLS restringem cada tabela ao usuário autenticado. As migrations habilitam as tabelas financeiras e recorrentes na publicação `supabase_realtime`.
+
+Contas a pagar permite cadastrar contas fixas e assinaturas mensais ou anuais, acompanhar vencimentos, marcar parcelas como pagas (criando um lançamento de despesa sem duplicar o pagamento) e cancelar recorrências futuras. O dia de vencimento é ajustado para o último dia em meses mais curtos.
 
 Em **Authentication > URL Configuration**, durante o desenvolvimento use `http://127.0.0.1:1420` como **Site URL** e adicione `http://127.0.0.1:1420/app` à lista de redirecionamentos permitidos. Depois do deploy, atualize o **Site URL** para o domínio da Vercel e permita também `https://consumy.vercel.app/app` (ajuste se o domínio mudar). O fluxo web retorna para `/app` após a confirmação de e-mail. Faça o cadastro inicial pela interface web no navegador; depois entre com a mesma conta no desktop.
 

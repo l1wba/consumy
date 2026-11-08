@@ -1,6 +1,9 @@
 import type {
   Category,
   NewTransaction,
+  NewRecurringItem,
+  RecurringItem,
+  RecurringPayment,
   ThemePreference,
   Transaction,
   TransactionId,
@@ -16,5 +19,10 @@ export interface FinanceStore {
   listTransactions(month: string): Promise<Transaction[]>;
   createTransaction(transaction: NewTransaction): Promise<void>;
   removeTransaction(id: TransactionId): Promise<void>;
+  listRecurringItems(): Promise<RecurringItem[]>;
+  createRecurringItem(item: NewRecurringItem): Promise<void>;
+  cancelRecurringItem(id: string): Promise<void>;
+  listRecurringPayments(month: string): Promise<RecurringPayment[]>;
+  markRecurringItemPaid(id: string, dueDate: string, paidDate: string): Promise<void>;
   subscribeToChanges(onChange: () => void, onError: (error: Error) => void): () => void;
 }

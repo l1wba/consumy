@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays,
+  CalendarClock,
   ChevronDown,
   CircleHelp,
   Info,
@@ -25,6 +26,7 @@ import { TransactionTable } from "./components/transactions/TransactionTable";
 import { AuthScreen } from "./components/auth/AuthScreen";
 import { LandingPage } from "./components/landing/LandingPage";
 import { DevelopmentNotice } from "./components/landing/DevelopmentNotice";
+import { RecurringPaymentsPage } from "./components/recurring/RecurringPaymentsPage";
 import {
   createCategory,
   createTransaction,
@@ -42,6 +44,7 @@ import {
   type TransactionId,
   type TransactionKind,
   type ThemePreference,
+  type RecurringItemType,
 } from "./db";
 import { formatMonth } from "./utils/format";
 import { getSupabaseClient, isSupabaseConfigured } from "./supabase/client";
@@ -186,6 +189,9 @@ function FinanceApp({
   const [categoryDialogBusy, setCategoryDialogBusy] = useState(false);
   const [editingCategoryName, setEditingCategoryName] = useState("");
   const [editedCategoryName, setEditedCategoryName] = useState("");
+  const [recurringView, setRecurringView] = useState<RecurringItemType | null>(null);
+  const [recurringMenuOpen, setRecurringMenuOpen] = useState(false);
+  const [financeRevision, setFinanceRevision] = useState(0);
 
   const categoriesForKind = useMemo(
     () => categories.filter((item) => item.kind === kind),
@@ -262,6 +268,7 @@ function FinanceApp({
 
   useEffect(() => subscribeToFinanceChanges(
     () => {
+      setFinanceRevision((revision) => revision + 1);
       void refresh();
       void refreshCategories();
       void refreshTheme();
@@ -478,9 +485,26 @@ function FinanceApp({
         </a>
         <div className="workspace-label">ESPAÇO PESSOAL</div>
         <nav className="main-nav" aria-label="Navegação principal">
-          <a className="nav-item active" href="#dashboard"><LayoutDashboard size={18} /> Visão geral</a>
-          <a className="nav-item" href="#transacoes"><Wallet size={18} /> Lançamentos</a>
-          <a className="nav-item" href="#categorias"><ChartNoAxesCombined size={18} /> Categorias</a>
+          <a className={`nav-item${recurringView === null ? " active" : ""}`} href="#dashboard" onClick={() => setRecurringView(null)}><LayoutDashboard size={18} /> Visão geral</a>
+          <a className="nav-item" href="#transacoes" onClick={() => setRecurringView(null)}><Wallet size={18} /> Lançamentos</a>
+          <a className="nav-item" href="#categorias" onClick={() => setRecurringView(null)}><ChartNoAxesCombined size={18} /> Categorias</a>
+          <div className={`recurring-nav-group${recurringMenuOpen ? " open" : ""}`}>
+            <button
+              className={`nav-item recurring-nav-trigger${recurringView ? " active" : ""}`}
+              type="button"
+              aria-expanded={recurringMenuOpen}
+              aria-controls="recurring-nav-submenu"
+              onClick={() => setRecurringMenuOpen((open) => !open)}
+            >
+              <CalendarClock size={18} />
+              <span>Contas a pagar</span>
+              <ChevronDown size={14} className="recurring-nav-chevron" />
+            </button>
+            <div className="recurring-nav-submenu" id="recurring-nav-submenu" aria-hidden={!recurringMenuOpen}>
+              <button className={recurringView === "bill" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => setRecurringView("bill")}>Contas fixas</button>
+              <button className={recurringView === "subscription" ? "selected" : ""} type="button" tabIndex={recurringMenuOpen ? 0 : -1} onClick={() => setRecurringView("subscription")}>Assinaturas</button>
+            </div>
+          </div>
         </nav>
         <div className="sidebar-bottom">
           <div className="local-note">
@@ -588,20 +612,32 @@ function FinanceApp({
 
       <main className="main-content" id="dashboard">
         <header className="topbar">
-          <div className="breadcrumb">Painel <span>/</span> <strong>Visão geral</strong></div>
+          <div className="breadcrumb">Painel <span>/</span> <strong>{recurringView === "bill" ? "Contas fixas" : recurringView === "subscription" ? "Assinaturas" : "Visão geral"}</strong></div>
           <div className="topbar-actions">
             <label className="month-picker">
               <CalendarDays size={16} />
-              <input aria-label="Mês dos lançamentos" type="month" value={month} onChange={(event) => setMonth(event.target.value || currentMonth())} />
+              <input aria-label={recurringView ? "Mês dos vencimentos" : "Mês dos lançamentos"} type="month" value={month} onChange={(event) => setMonth(event.target.value || currentMonth())} />
               <ChevronDown size={14} className="month-chevron" />
             </label>
-            <button className="primary-button" onClick={() => setFormOpen((open) => !open)} type="button">
-              <Plus size={17} /> Novo lançamento
-            </button>
+            {!recurringView && (
+              <button className="primary-button" onClick={() => setFormOpen((open) => !open)} type="button">
+                <Plus size={17} /> Novo lançamento
+              </button>
+            )}
           </div>
         </header>
 
         <div className="page-content">
+          {recurringView ? (
+            <RecurringPaymentsPage
+              itemType={recurringView}
+              month={month}
+              categories={categories}
+              syncVersion={financeRevision}
+              onPaymentComplete={() => void refresh()}
+            />
+          ) : (
+            <>
           <section className="welcome-row">
             <div>
               <p className="eyebrow">SEU RESUMO FINANCEIRO</p>
@@ -651,6 +687,8 @@ function FinanceApp({
             onDelete={(id, description) => void handleDelete(id, description)}
           />
           <footer className="page-footer">Finanças pessoais <span>•</span> Sincronizado com segurança</footer>
+            </>
+          )}
         </div>
       </main>
       {categoryDialog && (

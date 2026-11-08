@@ -4,6 +4,9 @@ import {
   DEFAULT_CATEGORIES,
   type Category,
   type NewTransaction,
+  NewRecurringItem,
+  RecurringItem,
+  RecurringPayment,
   type ThemePreference,
   type Transaction,
   type TransactionId,
@@ -144,9 +147,58 @@ export class SupabaseFinanceStore implements FinanceStore {
     if (error) throw error;
   }
 
+  async listRecurringItems(): Promise<RecurringItem[]> {
+    const { data, error } = await this.client
+      .from("recurring_items")
+      .select("id, name, amount, category, item_type, frequency, due_day, due_month, start_date, end_date, cancelled_at")
+      .order("name");
+    if (error) throw error;
+    return data as RecurringItem[];
+  }
+
+  async createRecurringItem(item: NewRecurringItem): Promise<void> {
+    const userId = await this.getUserId();
+    const { error } = await this.client
+      .from("recurring_items")
+      .insert({ ...item, user_id: userId });
+    if (error) throw error;
+  }
+
+  async cancelRecurringItem(id: string): Promise<void> {
+    const now = new Date();
+    const cancelledAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const { error } = await this.client
+      .from("recurring_items")
+      .update({ cancelled_at: cancelledAt })
+      .eq("id", id)
+      .is("cancelled_at", null);
+    if (error) throw error;
+  }
+
+  async listRecurringPayments(month: string): Promise<RecurringPayment[]> {
+    const [year, monthNumber] = month.split("-").map(Number);
+    const nextMonth = new Date(year, monthNumber, 1);
+    const endDate = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
+    const { data, error } = await this.client
+      .from("recurring_payments")
+      .select("recurring_item_id, due_date, transaction_id, paid_at")
+      .lt("due_date", endDate);
+    if (error) throw error;
+    return data as RecurringPayment[];
+  }
+
+  async markRecurringItemPaid(id: string, dueDate: string, paidDate: string): Promise<void> {
+    const { error } = await this.client.rpc("mark_recurring_item_paid", {
+      p_item_id: id,
+      p_due_date: dueDate,
+      p_paid_date: paidDate,
+    });
+    if (error) throw error;
+  }
+
   subscribeToChanges(onChange: () => void, onError: (error: Error) => void): () => void {
     let channel: RealtimeChannel = this.client.channel("finance-changes");
-    for (const table of ["categories", "transactions", "user_settings"] as const) {
+    for (const table of ["categories", "transactions", "user_settings", "recurring_items", "recurring_payments"] as const) {
       channel = channel.on(
         "postgres_changes",
         { event: "*", schema: "public", table },

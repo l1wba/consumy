@@ -3,6 +3,9 @@ import { SupabaseFinanceStore } from "./data/supabase-store";
 import type {
   Category,
   NewTransaction,
+  NewRecurringItem,
+  RecurringItem,
+  RecurringPayment,
   ThemePreference,
   Transaction,
   TransactionId,
@@ -12,10 +15,15 @@ export {
   DEFAULT_CATEGORIES,
   type Category,
   type NewTransaction,
+  type NewRecurringItem,
+  type RecurringItem,
+  type RecurringPayment,
   type ThemePreference,
   type Transaction,
   type TransactionId,
   type TransactionKind,
+  type RecurringItemType,
+  type RecurrenceFrequency,
 } from "./data/types";
 export type { FinanceStore } from "./data/finance-store";
 
@@ -60,6 +68,26 @@ export function createTransaction(transaction: NewTransaction): Promise<void> {
 
 export function removeTransaction(id: TransactionId): Promise<void> {
   return getStore().removeTransaction(id);
+}
+
+export function listRecurringItems(): Promise<RecurringItem[]> {
+  return getStore().listRecurringItems();
+}
+
+export function createRecurringItem(item: NewRecurringItem): Promise<void> {
+  return getStore().createRecurringItem(item);
+}
+
+export function cancelRecurringItem(id: string): Promise<void> {
+  return getStore().cancelRecurringItem(id);
+}
+
+export function listRecurringPayments(month: string): Promise<RecurringPayment[]> {
+  return getStore().listRecurringPayments(month);
+}
+
+export function markRecurringItemPaid(id: string, dueDate: string, paidDate: string): Promise<void> {
+  return getStore().markRecurringItemPaid(id, dueDate, paidDate);
 }
 
 export function subscribeToFinanceChanges(

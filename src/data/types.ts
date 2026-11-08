@@ -1,6 +1,8 @@
 export type TransactionKind = "income" | "expense";
 export type ThemePreference = "light" | "dark";
 export type TransactionId = number | string;
+export type RecurringItemType = "bill" | "subscription";
+export type RecurrenceFrequency = "monthly" | "yearly";
 
 export interface Transaction {
   id: TransactionId;
@@ -22,6 +24,39 @@ export interface NewTransaction {
 export interface Category {
   name: string;
   kind: TransactionKind;
+}
+
+export interface RecurringItem {
+  id: string;
+  name: string;
+  amount: number;
+  category: string;
+  item_type: RecurringItemType;
+  frequency: RecurrenceFrequency;
+  due_day: number;
+  due_month: number | null;
+  start_date: string;
+  end_date: string | null;
+  cancelled_at: string | null;
+}
+
+export interface NewRecurringItem {
+  name: string;
+  amount: number;
+  category: string;
+  item_type: RecurringItemType;
+  frequency: RecurrenceFrequency;
+  due_day: number;
+  due_month: number | null;
+  start_date: string;
+  end_date: string | null;
+}
+
+export interface RecurringPayment {
+  recurring_item_id: string;
+  due_date: string;
+  transaction_id: string | null;
+  paid_at: string;
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
