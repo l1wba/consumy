@@ -77,6 +77,9 @@ Em **Authentication > URL Configuration**, durante o desenvolvimento use `http:/
 
 ## Organização do código
 
+- `src/App.tsx`: roteamento entre a experiência pública e o aplicativo autenticado.
+- `src/components/auth/`: autenticação e sessão do Supabase.
+- `src/components/app/`: área principal autenticada (`FinanceWorkspace`) e navegação lateral (`FinanceSidebar`).
 - `src/components/landing/`: página pública de apresentação do consumy.
 - `src/components/dashboard/`: resumo mensal e indicadores financeiros.
 - `src/components/transactions/`: formulário e tabela de lançamentos.
